@@ -1,43 +1,52 @@
-# PRAHARI — 3–4 Minute Demo Video Script
+# PRAHARI — 3–4 Minute Demo Video Script (v2)
 
-**Recording setup:** OBS Studio (free) → screen record the app at 1440×900, webcam optional. Speak the narration below; total ≈ 3:30. Export MP4 (H.264, ~8 Mbps ≈ 45 MB — fits the 50 MB portal limit).
+**Recording setup:** OBS Studio (free) → screen record the app at 1440×900. Speak the narration below; total ≈ 3:40. Export MP4 (H.264, ~8 Mbps ≈ 45 MB — fits the 50 MB portal limit). Keep system audio ON — the intervention alert tone should be audible.
 
 ---
 
-### 0:00–0:30 — The Hook (slide or spoken over Command Centre)
+### 0:00–0:25 — The Hook (over Command Centre)
 
-> "In 2024, Indian citizens lost over ₹1,900 crore to a single category of crime: the digital arrest scam. An elderly retiree held on a video call for six hours by a fake CBI officer, terrified into wiring away her life savings. At the same time, fake ₹500 notes slip past manual checks at cash counters every day. Police investigate these one FIR at a time — after the money is gone. We built PRAHARI to stop the crime **while it is happening**."
+> "In the first nine months of 2024 alone, digital arrest scams stole ₹1,776 crore from Indian citizens — retirees held hostage on video calls by fake CBI officers, run from industrial fraud compounds using AI voices and deepfakes. Every tool we have today reacts *after* the money is gone. PRAHARI is built for the only moment that matters: **while the crime is still happening.**"
 
-### 0:30–1:00 — Command Centre
+*Screen: dashboard — let the stat counters animate up, hover a map hotspot, point at the live feed.*
 
-*Screen: dashboard.*
-> "PRAHARI is a national command centre for digital public safety. Live fraud hotspots and FICN corridors on the map — Jamtara, Nuh, the Malda border corridor — and a real-time intelligence feed fusing signals from all three of our AI engines."
+### 0:25–1:40 — LIVE INTERCEPT (the centrepiece — do not rush)
 
-### 1:00–1:50 — Scam Shield (the emotional core — go slow here)
+*Screen: Live Intercept → Begin Simulation. Let it run uninterrupted.*
 
-*Screen: Scam Shield → load "Digital Arrest (live case pattern)" → Analyze Call.*
-> "This is a real digital-arrest script pattern. Our NLP classifier scores the live call against five behavioural signal categories — authority impersonation, victim isolation, fear induction, financial extraction, identity harvesting."
-*Verdict flashes.*
-> "97 out of 100. Digital arrest scam detected — in under two seconds, **before the victim transfers a single rupee**. The victim's phone gets an alert, the telecom provider gets a spoof-block request, and an MHA incident report is auto-generated. And critically — watch the genuine bank call…" *(load benign sample, analyze)* "…score near zero. Low false positives are what make a citizen-facing tool deployable."
+> "This is a live scam call, replayed against PRAHARI's fusion pipeline. Five AI agents work in parallel. NumberTrace has already flagged the caller ID as spoofed — it presents as Mumbai Police, but resolves to an offshore VoIP gateway."
 
-### 1:50–2:40 — FICN Scanner
+*(as the transcript streams)*
+> "ScriptGuard matches the script to a known I4C playbook. VoiceGuard is analysing the audio — synthetic voice probability climbing… 78%. VideoGuard catches facial landmark jitter on the video call: that officer's face is a deepfake, 87%."
+
+*(risk gauge climbing, categories lighting up)*
+> "The fusion engine is watching the psychology: authority… isolation… fear… and now — the money ask."
+
+*(full-screen intervention fires with alert tone)*
+> "**Intercepted.** Mid-call, before a single rupee moved. The victim's phone gets a bilingual alert, her bank places a precautionary hold, the telecom provider gets a spoof-block, and an I4C case package is auto-generated. That is reactive-to-predictive, live on screen."
+
+### 1:40–2:20 — FICN Scanner
 
 *Screen: FICN Scanner → Suspect ₹500 → Run Authentication.*
-> "Module two: counterfeit currency. Any smartphone camera or bank counting machine becomes an authentication device. The vision model verifies seven RBI security features — watch it work: security thread… watermark… microlettering… intaglio relief…"
-*Verdict.*
-> "Counterfeit detected, 14% authenticity. And the serial number is cross-matched against the national seizure registry — this note links to a known batch from the Malda corridor. A teller gets this verdict in three seconds instead of relying on touch and instinct."
 
-### 2:40–3:20 — Network Intel (the wow moment)
+> "Threat two: counterfeit currency. Any smartphone or counting machine becomes an authenticator — seven RBI security features verified in seconds: thread… watermark… microlettering… Counterfeit, 14.6% authenticity. And the serial number cross-matches a seized batch from the Malda corridor — a note at a kirana counter just became national intelligence."
+
+### 2:20–3:00 — Network Intel
 
 *Screen: Network Intel → Run Campaign Detection.*
-> "Module three is where PRAHARI changes the game for law enforcement. Twelve victim reports across seven states look unrelated — until graph AI fuses call records, device fingerprints and mule-account linkages."
-*Detection fires, graph turns red.*
-> "One coordinated campaign, run from a cross-border compound, exposed 31 hours after the first report — with ₹4.2 crore of flow mapped through six mule accounts. One click exports a SHA-256-sealed, court-admissible evidence package, with freeze requests drafted for every mule account."
 
-### 3:20–3:45 — Close
+> "Twelve victim reports across seven states look unrelated — until graph AI fuses call records, device fingerprints and mule accounts. One coordinated campaign, exposed 31 hours after the first report, ₹4.2 crore mapped through six mule accounts. One click: a SHA-256-sealed, court-admissible evidence package with freeze requests drafted."
 
-> "Scam Shield protects the citizen. FICN Scanner protects the cash economy. Network Intel dismantles the network itself. Prevention, detection and prosecution — one platform. PRAHARI: Predict. Protect. Prosecute."
+### 3:00–3:30 — Citizen Shield
+
+*Screen: Citizen Shield → tap "CBI officer video call" → verdict → toggle हिं → tap report.*
+
+> "And for 140 crore citizens: the same engine on WhatsApp. Forward a suspicious call, get an explainable verdict in under two seconds — high risk, 74 out of 100, with the exact manipulation tactics named — in English or Hindi, with guided reporting to 1930. Every citizen report feeds the national graph. Protection becomes intelligence."
+
+### 3:30–3:45 — Close
+
+> "One platform. The citizen protected on the call, the teller protected at the counter, the network dismantled in court. PRAHARI: Predict. Protect. Prosecute."
 
 ---
 
-**Tips:** rehearse twice; keep cursor movements slow; record narration separately if room audio is poor; add a 5-second title card at the start with the team name and problem statement number.
+**Tips:** rehearse the Live Intercept timing twice — start narrating the agents as soon as the first log entries appear; the intervention fires ~17 seconds in. Add a 5-second title card with team name + problem statement #6.

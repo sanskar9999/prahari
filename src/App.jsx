@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react'
 import Dashboard from './components/Dashboard'
+import LiveIntercept from './components/LiveIntercept'
 import ScamShield from './components/ScamShield'
 import NoteScanner from './components/NoteScanner'
 import FraudGraph from './components/FraudGraph'
+import CitizenShield from './components/CitizenShield'
 
 const VIEWS = {
   dash: { title: 'National Command Centre', icon: '🗺️', nav: 'Command Centre' },
-  shield: { title: 'Scam Shield — Digital Arrest Detection', icon: '🛡️', nav: 'Scam Shield' },
+  intercept: { title: 'Live Intercept — Real-Time Scam Call Fusion', icon: '📡', nav: 'Live Intercept' },
+  shield: { title: 'Scam Shield — Transcript Forensics', icon: '🛡️', nav: 'Scam Shield' },
   scanner: { title: 'FICN Scanner — Counterfeit Currency Detection', icon: '🔍', nav: 'FICN Scanner' },
   graph: { title: 'Network Intel — Fraud Ring Graph AI', icon: '🕸️', nav: 'Network Intel' },
+  citizen: { title: 'Citizen Shield — Multi-Channel Conversational AI', icon: '💬', nav: 'Citizen Shield' },
 }
 
 export default function App() {
@@ -54,9 +58,11 @@ export default function App() {
         </header>
         <div className="content">
           {view === 'dash' && <Dashboard goTo={setView} />}
+          {view === 'intercept' && <LiveIntercept />}
           {view === 'shield' && <ScamShield />}
           {view === 'scanner' && <NoteScanner />}
           {view === 'graph' && <FraudGraph />}
+          {view === 'citizen' && <CitizenShield />}
         </div>
       </div>
     </div>

@@ -4,11 +4,27 @@ import 'leaflet/dist/leaflet.css'
 import { HOTSPOTS, FEED_EVENTS } from '../data/intel'
 
 const STATS = [
-  { value: '₹1,935 Cr', label: 'Lost to digital arrest scams (2024, I4C)', delta: '+42% YoY', dir: 'up' },
-  { value: '92,334', label: 'Digital arrest complaints registered', delta: '+38% YoY', dir: 'up' },
-  { value: '2.4 L', label: 'FICN pieces in circulation (est.)', delta: '₹500 = 85% of value', dir: 'up' },
-  { value: '11 min', label: 'Median alert-to-intervention time (PRAHARI)', delta: '-83% vs manual triage', dir: 'down' },
+  { num: 1776, prefix: '₹', suffix: ' Cr', label: 'Lost to digital arrest scams (Jan–Sep 2024, MHA)', delta: '+42% YoY', dir: 'up' },
+  { num: 92334, label: 'Digital arrest complaints registered', delta: '+38% YoY', dir: 'up' },
+  { num: 2.4, suffix: ' L', decimals: 1, label: 'FICN pieces in circulation (est.)', delta: '₹500 = 85% of value', dir: 'up' },
+  { num: 11, suffix: ' min', label: 'Median alert-to-intervention time (PRAHARI)', delta: '-83% vs manual triage', dir: 'down' },
 ]
+
+function CountUp({ num, prefix = '', suffix = '', decimals = 0 }) {
+  const [v, setV] = useState(0)
+  useEffect(() => {
+    const t0 = performance.now()
+    let raf
+    const step = (t) => {
+      const p = Math.min(1, (t - t0) / 1400)
+      setV(num * (1 - Math.pow(1 - p, 3)))
+      if (p < 1) raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [num])
+  return <>{prefix}{v.toLocaleString('en-IN', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}{suffix}</>
+}
 
 function ts(offsetMin) {
   const d = new Date(Date.now() - offsetMin * 60000)
@@ -60,7 +76,7 @@ export default function Dashboard({ goTo }) {
       <div className="grid-stats">
         {STATS.map((s) => (
           <div className="card" key={s.label}>
-            <div className="stat-value">{s.value}</div>
+            <div className="stat-value"><CountUp {...s} /></div>
             <div className="stat-label">{s.label}</div>
             <div className={`stat-delta ${s.dir}`}>{s.dir === 'up' ? '▲' : '▼'} {s.delta}</div>
           </div>
@@ -85,21 +101,31 @@ export default function Dashboard({ goTo }) {
         </div>
       </div>
 
-      <div className="module-links">
+      <div className="module-links five">
+        <div className="card module-link hero" onClick={() => goTo('intercept')}>
+          <div className="icon">📡</div>
+          <h3>Live Intercept</h3>
+          <p>Watch the fusion pipeline catch a digital-arrest call in real time — voice, video and script agents converging before the transfer.</p>
+        </div>
         <div className="card module-link" onClick={() => goTo('shield')}>
           <div className="icon">🛡️</div>
           <h3>Scam Shield</h3>
-          <p>Real-time NLP classification of live call transcripts against digital-arrest scam playbooks. Flags victims before the transfer happens.</p>
+          <p>Transcript forensics against digital-arrest playbooks with explainable, phrase-level verdicts.</p>
         </div>
         <div className="card module-link" onClick={() => goTo('scanner')}>
           <div className="icon">🔍</div>
           <h3>FICN Scanner</h3>
-          <p>Computer-vision counterfeit currency detection — security thread, microlettering, watermark and serial-pattern verification on any camera.</p>
+          <p>Computer-vision counterfeit detection — 7 RBI security features on any camera.</p>
         </div>
         <div className="card module-link" onClick={() => goTo('graph')}>
           <div className="icon">🕸️</div>
           <h3>Network Intel</h3>
-          <p>Graph AI that fuses victim reports, VoIP signatures and mule-account linkages into court-ready intelligence packages.</p>
+          <p>Graph AI turning scattered FIRs into court-ready campaign intelligence.</p>
+        </div>
+        <div className="card module-link" onClick={() => goTo('citizen')}>
+          <div className="icon">💬</div>
+          <h3>Citizen Shield</h3>
+          <p>Conversational fraud triage on WhatsApp &amp; IVR — English + हिन्दी live.</p>
         </div>
       </div>
     </div>
