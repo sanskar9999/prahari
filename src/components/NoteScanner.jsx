@@ -1,4 +1,6 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { rectifyNote } from '../lib/rectify'
+import { loadClassifier, classifyNote } from '../lib/noteClassifier'
 
 // Stylised ₹500 specimen (SVG) — demo stand-in for camera capture.
 function NoteSVG({ fake }) {
@@ -77,7 +79,7 @@ const FEATURES = [
   { name: 'Latent image & colour-shift ink (₹500)', roi: [86, 12, 11, 12], genuine: [true, 93.7], fake: [false, 37.9], note: 'No angle-dependent colour shift' },
 ]
 
-export default function NoteScanner() {
+function GuidedTab() {
   const [variant, setVariant] = useState(null) // 'genuine' | 'fake' | 'upload'
   const [imgSrc, setImgSrc] = useState(null)
   const [phase, setPhase] = useState('idle') // idle | scanning | done
@@ -114,18 +116,14 @@ export default function NoteScanner() {
   return (
     <div>
       <p className="section-desc">
-        Computer-vision counterfeit detection deployable on any smartphone camera, bank counting machine or PoS
-        terminal. The model verifies seven RBI security features and cross-checks the serial number against the
-        national FICN seizure database — instant verdict for tellers and field officers.
+        Educational walkthrough of the seven RBI security features on a stylised specimen — how the deployed
+        model explains its verdict to tellers and field officers. For genuine inference on actual photos, use
+        the <b>Real Photo Analysis</b> tab.
       </p>
 
       <div className="sample-row">
         <button className="btn ghost" onClick={() => load('genuine')}>Load specimen: Genuine ₹500</button>
         <button className="btn ghost" onClick={() => load('fake')}>Load specimen: Suspect ₹500</button>
-        <label className="btn ghost" style={{ display: 'inline-flex', alignItems: 'center' }}>
-          📷 Upload note photo
-          <input type="file" accept="image/*" onChange={onUpload} style={{ display: 'none' }} />
-        </label>
         {variant && <button className="btn danger" onClick={scan} disabled={phase === 'scanning'}>
           {phase === 'scanning' ? 'Scanning…' : '⚡ Run Authentication'}
         </button>}
@@ -183,19 +181,192 @@ export default function NoteScanner() {
             </>
           )}
 
-          {phase !== 'idle' && variant === 'upload' && (
-            <div className="analyzing" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
-              {phase === 'scanning' && <><div className="spinner" /><span>Extracting note geometry &amp; features…</span></>}
-              {phase === 'done' && (
-                <p style={{ color: 'var(--muted)', fontSize: 12.5, lineHeight: 1.7 }}>
-                  Uploaded-image pipeline requires the full model weights (not bundled in this demo build).
-                  Use the specimen notes for the end-to-end authentication flow.
-                </p>
-              )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Real Photo Analysis — genuine in-browser inference:
+// OpenCV.js perspective rectification -> MobileNet v2 embedding -> k-NN verdict
+// trained on the Kaggle real-vs-fake corpus + the team's own note photographs.
+// ---------------------------------------------------------------------------
+function RealTab() {
+  const [holdouts, setHoldouts] = useState([])
+  const [origUrl, setOrigUrl] = useState(null)
+  const [cropUrl, setCropUrl] = useState(null)
+  const [cropInfo, setCropInfo] = useState(null) // {method}
+  const [cropCanvas, setCropCanvas] = useState(null)
+  const [phase, setPhase] = useState('idle')    // idle|cropping|embedding|classifying|done|error
+  const [progress, setProgress] = useState(null)
+  const [verdict, setVerdict] = useState(null)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    fetch('/ficn/holdout.json').then((r) => (r.ok ? r.json() : [])).then(setHoldouts).catch(() => {})
+  }, [])
+
+  const analyze = async (imgEl, sourceUrl) => {
+    setOrigUrl(sourceUrl)
+    setCropUrl(null)
+    setVerdict(null)
+    setError(null)
+    try {
+      setPhase('cropping')
+      console.debug('[scanner] phase: cropping')
+      const rect = await rectifyNote(imgEl)
+      console.debug('[scanner] rectified via', rect.method)
+      // overlay the detected quad on the working image for the preview
+      if (rect.quad && rect.workCanvas) {
+        const ov = rect.workCanvas
+        const ctx = ov.getContext('2d')
+        ctx.strokeStyle = '#22d3ee'
+        ctx.lineWidth = Math.max(3, ov.width / 200)
+        ctx.beginPath()
+        rect.quad.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)))
+        ctx.closePath()
+        ctx.stroke()
+        setOrigUrl(ov.toDataURL('image/jpeg', 0.8))
+      }
+      setCropUrl(rect.canvas.toDataURL('image/jpeg', 0.9))
+      setCropInfo({ method: rect.method })
+      setCropCanvas(rect.canvas)
+
+      setPhase('embedding')
+      console.debug('[scanner] phase: loading classifier')
+      await loadClassifier((done, total) => setProgress({ done, total }))
+
+      setPhase('classifying')
+      console.debug('[scanner] phase: classifying')
+      const res = await classifyNote(rect.canvas)
+      console.debug('[scanner] verdict', res)
+      setVerdict(res)
+      setPhase('done')
+    } catch (err) {
+      setError(String(err?.message || err))
+      setPhase('error')
+    }
+  }
+
+  const onUpload = (e) => {
+    const f = e.target.files?.[0]
+    if (!f) return
+    const url = URL.createObjectURL(f)
+    const img = new Image()
+    img.onload = () => analyze(img, url)
+    img.src = url
+  }
+
+  const onHoldout = (h) => {
+    const url = `/ficn/${h.file}`
+    const img = new Image()
+    img.onload = () => analyze(img, url)
+    img.src = url
+  }
+
+  const isFake = verdict?.label === 'fake'
+  const conf = verdict ? Math.round((verdict.confidences[verdict.label] || 0) * 100) : 0
+
+  return (
+    <div>
+      <p className="section-desc">
+        <b>Real inference, in your browser:</b> the photo is auto-cropped and perspective-corrected by our
+        CV rectifier (OTSU segmentation + min-area-rect + homography warp), embedded with MobileNet v2, and
+        classified genuine-vs-fake by k-NN over a corpus of real note
+        photographs (including our own) and print-grade counterfeits from a public dataset. Nothing is staged —
+        try the held-out test images (never shown to the model) or upload your own photo.
+      </p>
+
+      <div className="sample-row">
+        <label className="btn danger" style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
+          📷 Upload / photograph a note
+          <input type="file" accept="image/*" onChange={onUpload} style={{ display: 'none' }} />
+        </label>
+        {holdouts.map((h) => (
+          <button key={h.file} className="btn ghost" onClick={() => onHoldout(h)}>
+            Hold-out test: {h.label === 'genuine' ? `genuine ₹${h.denom}` : `counterfeit (${h.denom !== 'unknown' ? '₹' + h.denom : 'print-grade'})`}
+          </button>
+        ))}
+      </div>
+
+      <div className="scanner-grid">
+        <div className="note-stage" style={{ flexDirection: 'column', gap: 14 }}>
+          {!origUrl && <p style={{ color: 'var(--muted)', fontSize: 13 }}>Upload a photo of a note, or run a hold-out test image.</p>}
+          {origUrl && (
+            <div className="real-pair">
+              <div>
+                <div className="mini-note" style={{ marginBottom: 6 }}>ORIGINAL {cropInfo?.method === 'warp' ? '· note contour detected' : ''}</div>
+                <img src={origUrl} alt="original" className="real-orig" />
+              </div>
+              <div>
+                <div className="mini-note" style={{ marginBottom: 6 }}>
+                  RECTIFIED 640×280 {cropInfo ? (cropInfo.method === 'warp' ? '· perspective-warped' : '· centre-crop fallback') : ''}
+                </div>
+                {cropUrl ? <img src={cropUrl} alt="rectified note" className="real-crop" /> : <div className="analyzing"><div className="spinner" />Detecting note geometry…</div>}
+              </div>
             </div>
           )}
         </div>
+
+        <div className="card">
+          <div className="card-title">Authentication Report — live inference</div>
+
+          {phase === 'idle' && <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.6 }}>Verdict, class confidences and detected denomination appear here.</p>}
+          {phase === 'cropping' && <div className="analyzing"><div className="spinner" />Locating note &amp; correcting perspective…</div>}
+          {phase === 'embedding' && (
+            <div className="analyzing" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
+              <span><div className="spinner" style={{ display: 'inline-block', marginRight: 8 }} />Building classifier — embedding training corpus…</span>
+              {progress && <div className="track" style={{ width: '100%', marginTop: 10 }}><div className="fill" style={{ width: `${(progress.done / progress.total) * 100}%`, background: 'var(--cyan)' }} /></div>}
+              {progress && <span className="mini-note">{progress.done}/{progress.total} samples (MobileNet v2, in-browser)</span>}
+            </div>
+          )}
+          {phase === 'classifying' && <div className="analyzing"><div className="spinner" />k-NN inference…</div>}
+          {phase === 'error' && <div className="mic-banner err">⚠ {error}</div>}
+
+          {phase === 'done' && verdict && (
+            <>
+              <div className={`verdict ${isFake ? 'critical' : 'low'}`} style={{ padding: '14px 16px' }}>
+                <h2 style={{ fontSize: 18 }}>{isFake ? '🚨 COUNTERFEIT INDICATED' : '✓ GENUINE INDICATED'}</h2>
+                <p>
+                  k-NN confidence <b>{conf}%</b>
+                  {verdict.denom && <> · denomination <b>₹{verdict.denom}</b></>}
+                  {isFake && ' · flag for physical verification and seizure protocol.'}
+                </p>
+              </div>
+              {['genuine', 'fake'].map((l) => (
+                <div className="cat-bar" key={l}>
+                  <div className="cat-head">
+                    <span>{l === 'genuine' ? 'Genuine class' : 'Counterfeit class'}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', color: l === 'fake' ? 'var(--red)' : 'var(--green)' }}>
+                      {Math.round((verdict.confidences[l] || 0) * 100)}%
+                    </span>
+                  </div>
+                  <div className="track"><div className="fill" style={{ width: `${(verdict.confidences[l] || 0) * 100}%`, background: l === 'fake' ? 'var(--red)' : 'var(--green)' }} /></div>
+                </div>
+              ))}
+              <p className="mini-note" style={{ marginTop: 12, lineHeight: 1.7 }}>
+                Demo-grade model: counterfeit class = print-grade fakes from a public dataset (real FICN is
+                illegal to possess). Production path replaces k-NN with a supervised model on bank-grade sensor
+                data — same pipeline, same UI.
+              </p>
+            </>
+          )}
+        </div>
       </div>
+    </div>
+  )
+}
+
+export default function NoteScanner() {
+  const [tab, setTab] = useState('real')
+  return (
+    <div>
+      <div className="tab-row">
+        <button className={`tab-btn ${tab === 'real' ? 'on' : ''}`} onClick={() => setTab('real')}>📷 Real Photo Analysis</button>
+        <button className={`tab-btn ${tab === 'guided' ? 'on' : ''}`} onClick={() => setTab('guided')}>🎓 Guided Feature Walkthrough</button>
+      </div>
+      {tab === 'real' ? <RealTab /> : <GuidedTab />}
     </div>
   )
 }

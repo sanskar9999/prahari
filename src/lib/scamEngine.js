@@ -13,6 +13,9 @@ export const CATEGORIES = [
       'narcotics', 'fir', 'arrest warrant', 'supreme court', 'cyber cell',
       'income tax', 'interpol', 'mumbai police', 'delhi police', 'crime branch',
       'ncb', 'officer speaking', 'inspector', 'court order', 'ed officer',
+      // US-agency variants (government-impersonation robocalls, FTC corpus)
+      'social security', 'irs', 'magistrate', 'grand jury', 'law enforcement',
+      'legal enforcement', 'federal criminal', 'warrant', 'officer',
     ],
   },
   {
@@ -37,6 +40,8 @@ export const CATEGORIES = [
       'will be arrested', 'non-bailable', 'account will be frozen', 'legal action',
       'case registered against you', 'money laundering', 'right now', 'final notice',
       'serious crime', 'jail',
+      'suspended', 'suspension', 'legal consequences', 'criminal offense',
+      'final attempt', 'fraudulent activities',
     ],
   },
   {
@@ -55,7 +60,7 @@ export const CATEGORIES = [
     label: 'Identity Harvesting',
     weight: 10,
     color: '#34d399',
-    terms: ['aadhaar', 'pan card', 'pan number', 'bank account number', 'otp', 'cvv', 'passport number'],
+    terms: ['aadhaar', 'pan card', 'pan number', 'bank account number', 'otp', 'cvv', 'passport number', 'social security number'],
   },
 ]
 

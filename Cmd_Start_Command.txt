@@ -1,0 +1,2 @@
+cd "C:\Users\91800\Desktop\ET Hack 2\prahari"
+npm run dev

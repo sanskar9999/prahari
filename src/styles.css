@@ -267,6 +267,66 @@ mark.identity { background: rgba(52,211,153,0.2); color: #a7f3d0; }
 }
 .card { box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 10px 30px -18px rgba(0,0,0,0.7); }
 
+/* ---------- Note Scanner v2 ---------- */
+.tab-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.tab-btn {
+  background: var(--panel); border: 1px solid var(--border); color: var(--muted);
+  border-radius: 9px; padding: 9px 16px; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: var(--font-body); transition: all 0.15s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.on { color: var(--cyan); border-color: var(--cyan); background: var(--cyan-dim); }
+
+.real-pair { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+.real-orig { max-height: 260px; max-width: 100%; border-radius: 8px; border: 1px solid var(--border); display: block; }
+.real-crop { width: 100%; max-width: 560px; border-radius: 6px; border: 1px solid var(--cyan); display: block; box-shadow: 0 0 24px -8px rgba(34,211,238,0.4); }
+
+/* ---------- Live Mic ---------- */
+.mic-banner {
+  display: flex; align-items: center; gap: 9px;
+  background: var(--red-dim); border: 1px solid rgba(248,83,107,0.4); color: var(--text);
+  border-radius: 8px; padding: 9px 12px; font-size: 12px; margin-bottom: 10px; line-height: 1.5;
+}
+.mic-banner.err { background: rgba(251,191,36,0.09); border-color: rgba(251,191,36,0.4); }
+.mic-dot { width: 9px; height: 9px; min-width: 9px; border-radius: 50%; background: var(--red); animation: pulse-soft 1s infinite; }
+
+/* ---------- Live Intercept v2 (audio) ---------- */
+.source-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.source-pill {
+  display: flex; align-items: center; gap: 9px;
+  background: var(--panel); color: var(--muted);
+  border: 1px solid var(--border); border-radius: 9px;
+  padding: 8px 13px; font-size: 12.5px; cursor: pointer; font-family: var(--font-body);
+  transition: all 0.15s;
+}
+.source-pill:hover { color: var(--text); }
+.source-pill.on { color: var(--text); border-color: var(--cyan); background: var(--cyan-dim); }
+.source-tag {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.8px;
+  padding: 2px 7px; border-radius: 4px;
+}
+.source-tag.tts { background: rgba(34,211,238,0.14); color: var(--cyan); }
+.source-tag.real { background: var(--red-dim); color: var(--red); border: 1px solid rgba(248,83,107,0.4); }
+
+.rate-group { display: flex; gap: 4px; }
+.rate-btn {
+  background: transparent; border: 1px solid var(--border); color: var(--muted);
+  border-radius: 6px; padding: 6px 10px; font-size: 11.5px; cursor: pointer; font-family: var(--font-mono);
+}
+.rate-btn.on { color: var(--cyan); border-color: var(--cyan); background: var(--cyan-dim); }
+
+.videoframe.standby {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); min-height: 150px;
+}
+.standby-inner {
+  text-align: center; font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px;
+  color: var(--muted); display: flex; flex-direction: column; gap: 6px; padding: 12px;
+}
+.standby-inner span { font-size: 9.5px; letter-spacing: 0.4px; text-transform: none; line-height: 1.6; opacity: 0.75; }
+
+.mini-note { font-size: 9.5px; color: var(--muted); font-family: var(--font-mono); letter-spacing: 0.3px; text-transform: none; }
+
 /* ---------- Live Intercept ---------- */
 .li-toolbar { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
 .sim-badge {
