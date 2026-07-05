@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { analyzeTranscript, highlightTranscript, SAMPLE_TRANSCRIPTS } from '../lib/scamEngine'
-import { startMic, isBrave } from '../lib/micStt'
+import { startMic, isBrave, runSampleThroughRecognizer } from '../lib/micStt'
 
 export default function ScamShield() {
   const [text, setText] = useState(SAMPLE_TRANSCRIPTS[0].text)
@@ -12,6 +12,7 @@ export default function ScamShield() {
   const [micEngine, setMicEngine] = useState(null)
   const [micLevel, setMicLevel] = useState(0)
   const [brave, setBrave] = useState(false)
+  const [selfTest, setSelfTest] = useState(false)
   const sessionRef = useRef(null)
   const peakRef = useRef(0)
 
@@ -62,6 +63,23 @@ export default function ScamShield() {
     setMicEngine(session.engine)
   }
 
+  const runSelfTest = () => {
+    if (selfTest || micOn) return
+    setSelfTest(true)
+    setMicErr(null)
+    setText('')
+    setResult(null)
+    runSampleThroughRecognizer({
+      onText: (full) => {
+        setText(full)
+        setResult(full ? analyzeTranscript(full) : null)
+      },
+      onStatus: setMicStatus,
+      onDone: () => { setSelfTest(false); setMicStatus(null) },
+      onError: (e) => { setMicErr(e); setSelfTest(false); setMicStatus(null) },
+    })
+  }
+
   const gaugeColor =
     !result ? 'var(--muted)' : result.verdict === 'critical' ? 'var(--red)' : result.verdict === 'suspicious' ? 'var(--amber)' : 'var(--green)'
 
@@ -84,11 +102,30 @@ export default function ScamShield() {
             <button
               className={`btn ${micOn ? 'danger' : 'ghost'}`}
               onClick={toggleMic}
+              disabled={selfTest}
               title="Real speech-to-text — offline Vosk model (en-IN), no cloud required"
             >
               {micOn ? '⏹ Stop Mic — listening…' : '🎙 Live Mic (real STT)'}
             </button>
+            <button
+              className="btn ghost"
+              onClick={runSelfTest}
+              disabled={selfTest || micOn}
+              title="Streams the real FTC scam recording through the same offline recogniser — no microphone needed"
+            >
+              {selfTest ? '🧪 Recognising…' : '🧪 STT self-test (no mic)'}
+            </button>
           </div>
+
+          {selfTest && micStatus && (
+            <div className="mic-banner"><div className="spinner" /> {micStatus}</div>
+          )}
+          {selfTest && !micStatus && (
+            <div className="mic-banner">
+              <span className="mic-dot" /> Streaming the REAL scam recording through the offline recogniser —
+              transcript and risk update live below. No microphone involved.
+            </div>
+          )}
 
           {micOn && micStatus && (
             <div className="mic-banner"><div className="spinner" /> {micStatus}</div>

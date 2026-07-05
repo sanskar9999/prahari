@@ -32,6 +32,59 @@ function loadVoskModel(onStatus) {
   return modelPromise
 }
 
+/**
+ * No-mic self-test: stream the REAL scam recording through the exact same
+ * offline recogniser the mic uses. Proves the STT stack in any browser,
+ * independent of microphone hardware or Brave's audio farbling.
+ */
+export async function runSampleThroughRecognizer({ onText, onStatus, onDone, onError }) {
+  try {
+    const model = await loadVoskModel(onStatus)
+    onStatus?.('Decoding the real scam recording…')
+    const url = new URL(`${import.meta.env.BASE_URL}audio/real/case1.wav`, window.location.href).href
+    const arr = await fetch(url).then((r) => {
+      if (!r.ok) throw new Error('sample recording missing')
+      return r.arrayBuffer()
+    })
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const buf = await ctx.decodeAudioData(arr)
+    const rec = new model.KaldiRecognizer(buf.sampleRate)
+    rec.setWords(false)
+    let finalText = ''
+    rec.on('result', (m) => {
+      const t = m.result?.text?.trim()
+      if (t) { finalText = `${finalText} ${t}`.trim(); onText(finalText, false) }
+    })
+    rec.on('partialresult', (m) => {
+      const p = m.result?.partial?.trim()
+      if (p) onText(`${finalText} ${p}`.trim(), true)
+    })
+    onStatus?.(null)
+    const CH = 4096
+    const data = buf.getChannelData(0)
+    // pace at ~5x real time so the recogniser keeps up; results stream in live
+    const delayMs = Math.max(8, Math.round((CH / buf.sampleRate) * 1000 / 5))
+    for (let i = 0; i < data.length; i += CH) {
+      const n = Math.min(CH, data.length - i)
+      const chunk = ctx.createBuffer(1, n, buf.sampleRate)
+      chunk.getChannelData(0).set(data.subarray(i, i + n))
+      try { rec.acceptWaveform(chunk) } catch { /* skip bad frame */ }
+      await new Promise((r) => setTimeout(r, delayMs))
+    }
+    // let the worker drain its queue before asking for the final result
+    await new Promise((r) => setTimeout(r, 2500))
+    rec.retrieveFinalResult()
+    setTimeout(() => {
+      try { rec.remove() } catch { /* ok */ }
+      ctx.close().catch(() => {})
+      onStatus?.(null)
+      onDone?.()
+    }, 1500)
+  } catch (err) {
+    onError?.(`Self-test failed: ${err.message || err}`)
+  }
+}
+
 /** True in Brave — its fingerprint protection ("farbling") corrupts Web Audio
  *  capture even when mic permission is granted, which silently breaks STT. */
 export async function isBrave() {

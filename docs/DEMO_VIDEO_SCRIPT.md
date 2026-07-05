@@ -71,6 +71,8 @@ The core message of every beat: **nothing is staged** — say it, then prove it.
 ---
 
 **Rehearsal notes**
+- Live Mic backstop: if the mic ever misbehaves on stage, hit **🧪 STT self-test (no mic)** — it streams the real
+  scam recording through the same offline recogniser and the transcript/risk fill in live. Same proof, zero hardware risk.
 - Real-case intervention lands ~15 s in; TTS call at 1.25× lands ~55 s in — start narration immediately.
 - Live Mic needs Chrome + mic permission granted beforehand (do a test run so the permission prompt doesn't appear on camera).
 - Keep the FICN hold-out buttons order memorised: counterfeit first (drama), genuine second (trust).
