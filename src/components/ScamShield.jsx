@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { analyzeTranscript, highlightTranscript, SAMPLE_TRANSCRIPTS } from '../lib/scamEngine'
-import { startMic } from '../lib/micStt'
+import { startMic, isBrave } from '../lib/micStt'
 
 export default function ScamShield() {
   const [text, setText] = useState(SAMPLE_TRANSCRIPTS[0].text)
@@ -10,9 +10,15 @@ export default function ScamShield() {
   const [micErr, setMicErr] = useState(null)
   const [micStatus, setMicStatus] = useState(null)
   const [micEngine, setMicEngine] = useState(null)
+  const [micLevel, setMicLevel] = useState(0)
+  const [brave, setBrave] = useState(false)
   const sessionRef = useRef(null)
+  const peakRef = useRef(0)
 
-  useEffect(() => () => sessionRef.current?.stop(), [])
+  useEffect(() => {
+    isBrave().then(setBrave)
+    return () => sessionRef.current?.stop()
+  }, [])
 
   const run = () => {
     setBusy(true)
@@ -37,6 +43,8 @@ export default function ScamShield() {
     setText('')
     setResult(null)
     setMicOn(true)
+    peakRef.current = 0
+    setMicLevel(0)
     const session = await startMic({
       onText: (full) => {
         setText(full)
@@ -44,6 +52,10 @@ export default function ScamShield() {
       },
       onStatus: setMicStatus,
       onError: (e) => { setMicErr(e); setMicOn(false); setMicStatus(null) },
+      onLevel: (l) => {
+        peakRef.current = Math.max(peakRef.current, l)
+        setMicLevel(l)
+      },
     })
     if (!session) { setMicOn(false); return }
     sessionRef.current = session
@@ -82,12 +94,32 @@ export default function ScamShield() {
             <div className="mic-banner"><div className="spinner" /> {micStatus}</div>
           )}
           {micOn && !micStatus && (
-            <div className="mic-banner">
-              <span className="mic-dot" /> LIVE — real speech-to-text ({micEngine || 'starting…'}). Speak a scam line,
-              e.g. “I am calling from the CBI, there is an arrest warrant against you, transfer the money immediately.”
+            <div className="mic-banner" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 7 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                <span className="mic-dot" /> LIVE — real speech-to-text ({micEngine || 'starting…'}). Speak a scam line,
+                e.g. “I am calling from the CBI, there is an arrest warrant against you, transfer the money immediately.”
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className="mini-note" style={{ minWidth: 60 }}>MIC LEVEL</span>
+                <div className="track" style={{ flex: 1 }}>
+                  <div className="fill" style={{ width: `${Math.round(micLevel * 100)}%`, background: micLevel > 0.03 ? 'var(--green)' : 'var(--red)', transition: 'width 0.1s linear' }} />
+                </div>
+              </div>
+              {peakRef.current < 0.03 && (
+                <span className="mini-note" style={{ color: 'var(--amber)' }}>
+                  If this bar never moves while you speak, the browser is delivering silence.
+                  {brave ? ' Brave detected — its Shields corrupt audio capture: click the lion icon and turn Shields OFF for this site, or use Chrome.' : ' Check your input device in browser site settings.'}
+                </span>
+              )}
             </div>
           )}
           {micErr && <div className="mic-banner err">⚠ {micErr}</div>}
+          {brave && !micOn && (
+            <div className="mic-banner err" style={{ fontSize: 11.5 }}>
+              Brave detected: for Live Mic, turn Shields OFF for this site (lion icon in the address bar) — Brave&apos;s
+              fingerprint protection feeds randomised audio to the recogniser. Chrome works out of the box.
+            </div>
+          )}
 
           <textarea
             className="transcript"

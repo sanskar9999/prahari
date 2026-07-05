@@ -8,6 +8,10 @@ Problem Statement #6: *AI for Digital Public Safety — Defeating Counterfeiting
 
 *Predict. Protect. Prosecute.*
 
+**🔴 Live demo: https://sanskar9999.github.io/prahari/** — runs entirely in your browser, phone included.
+
+![PRAHARI National Command Centre](docs/screenshots/Prahari_Command_Center.png)
+
 </div>
 
 ---
@@ -80,6 +84,15 @@ Demo flow (3–4 minutes, sound on):
 4. **FICN Scanner** — *Real Photo Analysis* → run a hold-out test image (never seen by the model) or photograph a real note
 5. **Network Intel** — *Run Campaign Detection* → campaign confirmed → export sealed evidence package
 6. **Citizen Shield** — "CBI officer" scenario → HIGH RISK 74/100 → toggle हिं → file 1930 report
+
+## Gallery
+
+| | |
+|---|---|
+| ![Live Intercept](docs/screenshots/Live_Intercept.png) *Live Intercept — real scam audio, word-synced transcript, live fusion risk* | ![Interception](docs/screenshots/Digital_Arrest_Intercepted.png) *The moment PRAHARI cuts the call — before any transfer* |
+| ![Scam Shield](docs/screenshots/Scam_Shield_Scam_Detected.png) *Scam Shield — explainable phrase-level verdict (97/100)* | ![Low false positives](docs/screenshots/Scam_Shield_No_Scam.png) *A genuine bank call scores 3/100 — the false-positive control* |
+| ![FICN real inference](docs/screenshots/FICN_Scanner_Photo_Upload_Genuine.png) *Real photo → auto-crop → MobileNet+k-NN → genuine, ₹200* | ![FICN counterfeit](docs/screenshots/FICN_Scanner_Counterfeit.png) *Held-out counterfeit caught by the in-browser model* |
+| ![Network Intel](docs/screenshots/Network_Intel.png) *Guided investigation — twelve FIRs become one campaign* | ![Citizen Shield](docs/screenshots/Citizen_Shield_Hindi.png) *Citizen Shield triaging in हिन्दी* |
 
 ## Architecture
 

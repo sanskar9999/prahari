@@ -32,11 +32,18 @@ function loadVoskModel(onStatus) {
   return modelPromise
 }
 
+/** True in Brave — its fingerprint protection ("farbling") corrupts Web Audio
+ *  capture even when mic permission is granted, which silently breaks STT. */
+export async function isBrave() {
+  try { return !!(navigator.brave && await navigator.brave.isBrave()) } catch { return false }
+}
+
 /**
  * Start live STT. Returns { stop, engine } — call stop() to end the session.
  * onText(fullText, isPartial) fires as words are recognised.
+ * onLevel(0..1) fires with live mic input level so dead capture is visible.
  */
-export async function startMic({ onText, onStatus, onError }) {
+export async function startMic({ onText, onStatus, onError, onLevel }) {
   // --- Vosk path ---
   try {
     const model = await loadVoskModel(onStatus)
@@ -45,6 +52,8 @@ export async function startMic({ onText, onStatus, onError }) {
       audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
     })
     const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    // user activation may have expired while the model loaded — resume explicitly
+    if (ctx.state === 'suspended') await ctx.resume()
     const recognizer = new model.KaldiRecognizer(ctx.sampleRate)
     recognizer.setWords(false)
 
@@ -64,6 +73,10 @@ export async function startMic({ onText, onStatus, onError }) {
     const source = ctx.createMediaStreamSource(stream)
     const node = ctx.createScriptProcessor(4096, 1, 1)
     node.onaudioprocess = (e) => {
+      const data = e.inputBuffer.getChannelData(0)
+      let sum = 0
+      for (let i = 0; i < data.length; i += 16) sum += data[i] * data[i]
+      onLevel?.(Math.min(1, Math.sqrt(sum / (data.length / 16)) * 8))
       try { recognizer.acceptWaveform(e.inputBuffer) } catch { /* ignore frame errors */ }
     }
     source.connect(node)
