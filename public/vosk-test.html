@@ -1,17 +1,39 @@
 <!doctype html>
 <html>
-<head><meta charset="utf-8"><title>vosk isolation test</title></head>
+<head><meta charset="utf-8"><title>vosk diagnostic</title></head>
 <body>
 <pre id="log">starting…</pre>
 <script src="/node_modules/vosk-browser/dist/vosk.js"></script>
 <script>
-const log = (m) => { document.getElementById('log').textContent += '\n' + m; console.log('[vosktest]', m) }
+const log = (m) => { document.getElementById('log').textContent += '\n' + m; console.log('[vosktest] ' + m) }
+window.addEventListener('error', (e) => log('PAGE ERROR: ' + e.message + ' @ ' + e.filename + ':' + e.lineno))
+window.addEventListener('unhandledrejection', (e) => log('UNHANDLED REJECTION: ' + e.reason))
 log('Vosk global: ' + typeof Vosk)
-const t0 = performance.now()
-Vosk.createModel(location.origin + '/models/vosk-en-in.tar.gz', 2)
-  .then((m) => log('MODEL READY in ' + Math.round(performance.now() - t0) + 'ms'))
-  .catch((e) => log('MODEL FAILED: ' + e))
-setInterval(() => log('t+' + Math.round((performance.now() - t0) / 1000) + 's'), 5000)
+
+function tryModel(name, url) {
+  return new Promise((resolve) => {
+    const t0 = performance.now()
+    log(`[${name}] creating Model for ${url}`)
+    let settled = false
+    const done = (msg) => { if (!settled) { settled = true; log(`[${name}] ${msg} (t+${Math.round((performance.now() - t0) / 1000)}s)`); resolve() } }
+    try {
+      const m = new Vosk.Model(url, 2)
+      if (m.worker) {
+        m.worker.addEventListener('error', (e) => done('WORKER ERROR: ' + (e.message || 'unknown') + ' @ ' + (e.filename || '?') + ':' + (e.lineno || '?')))
+        m.worker.addEventListener('messageerror', () => done('WORKER MESSAGE ERROR'))
+      }
+      m.on('load', (msg) => done('LOAD EVENT result=' + JSON.stringify(msg.result)))
+      m.on('error', (msg) => done('MODEL ERROR EVENT: ' + JSON.stringify(msg)))
+      setTimeout(() => done('TIMEOUT after 75s — no event from worker'), 75000)
+    } catch (err) { done('THREW: ' + err) }
+  })
+}
+
+;(async () => {
+  await tryModel('LOCAL en-in tar.gz', location.origin + '/models/vosk-en-in.tar.gz')
+  await tryModel('OFFICIAL en-us (remote)', 'https://ccoreilly.github.io/vosk-browser/models/vosk-model-small-en-us-0.15.tar.gz')
+  log('ALL TESTS DONE')
+})()
 </script>
 </body>
 </html>

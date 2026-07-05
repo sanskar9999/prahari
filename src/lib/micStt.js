@@ -3,20 +3,30 @@
 // fully offline in the browser, so it works on GitHub Pages, Brave, Edge and
 // flaky networks. Fallback: Chrome's Web Speech API (needs Google servers).
 
-import { createModel } from 'vosk-browser'
+import { Model } from 'vosk-browser'
 
 let modelPromise = null
 
 function loadVoskModel(onStatus) {
   if (!modelPromise) {
-    onStatus?.('Downloading offline speech model (~37 MB, first time only)…')
-    // vosk's worker runs from a blob URL, so relative paths won't resolve — pass absolute
+    onStatus?.('Loading offline speech model (~36 MB, first time only)…')
+    // vosk's worker runs from a blob URL, so relative paths won't resolve — pass absolute.
+    // Use Model directly (not createModel) so worker/model error events reject fast
+    // instead of hanging forever.
     const url = new URL(`${import.meta.env.BASE_URL}models/vosk-en-in.tar.gz`, window.location.href).href
-    console.debug('[micStt] createModel', url)
-    modelPromise = Promise.race([
-      createModel(url, 2).then((m) => { console.debug('[micStt] model ready'); return m }),
-      new Promise((_, rej) => setTimeout(() => rej(new Error('offline model load timed out')), 90000)),
-    ])
+    modelPromise = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('offline speech model timed out (slow connection?)')), 120000)
+      try {
+        const m = new Model(url, 0)
+        m.on('load', (msg) => {
+          clearTimeout(timeout)
+          if (msg.result) { console.debug('[micStt] vosk model ready'); resolve(m) }
+          else reject(new Error('speech model failed to initialise'))
+        })
+        m.on('error', (msg) => { clearTimeout(timeout); reject(new Error(`speech model error: ${msg?.error || 'load failed'}`)) })
+        m.worker?.addEventListener?.('error', (e) => { clearTimeout(timeout); reject(new Error(`speech worker error: ${e.message || 'crashed'}`)) })
+      } catch (err) { clearTimeout(timeout); reject(err) }
+    })
     modelPromise.catch((e) => { console.warn('[micStt] model load failed', e); modelPromise = null })
   }
   return modelPromise
