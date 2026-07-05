@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>vosk isolation test</title></head>
+<body>
+<pre id="log">starting…</pre>
+<script src="/node_modules/vosk-browser/dist/vosk.js"></script>
+<script>
+const log = (m) => { document.getElementById('log').textContent += '\n' + m; console.log('[vosktest]', m) }
+log('Vosk global: ' + typeof Vosk)
+const t0 = performance.now()
+Vosk.createModel(location.origin + '/models/vosk-en-in.tar.gz', 2)
+  .then((m) => log('MODEL READY in ' + Math.round(performance.now() - t0) + 'ms'))
+  .catch((e) => log('MODEL FAILED: ' + e))
+setInterval(() => log('t+' + Math.round((performance.now() - t0) / 1000) + 's'), 5000)
+</script>
+</body>
+</html>

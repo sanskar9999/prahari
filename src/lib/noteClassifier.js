@@ -33,7 +33,7 @@ export function loadClassifier(onProgress) {
       await pickBackend()
       const [net, embeddings] = await Promise.all([
         mobilenet.load({ version: 2, alpha: 0.5 }),
-        fetch('/ficn/embeddings.json').then((r) => {
+        fetch(`${import.meta.env.BASE_URL}ficn/embeddings.json`).then((r) => {
           if (!r.ok) throw new Error('embeddings.json missing — run tools/embed_notes.mjs')
           return r.json()
         }),

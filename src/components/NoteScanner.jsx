@@ -204,7 +204,7 @@ function RealTab() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    fetch('/ficn/holdout.json').then((r) => (r.ok ? r.json() : [])).then(setHoldouts).catch(() => {})
+    fetch(`${import.meta.env.BASE_URL}ficn/holdout.json`).then((r) => (r.ok ? r.json() : [])).then(setHoldouts).catch(() => {})
   }, [])
 
   const analyze = async (imgEl, sourceUrl) => {
@@ -259,7 +259,7 @@ function RealTab() {
   }
 
   const onHoldout = (h) => {
-    const url = `/ficn/${h.file}`
+    const url = `${import.meta.env.BASE_URL}ficn/${h.file}`
     const img = new Image()
     img.onload = () => analyze(img, url)
     img.src = url

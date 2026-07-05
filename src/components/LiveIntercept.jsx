@@ -156,6 +156,7 @@ export default function LiveIntercept() {
   const [, setRenderTick] = useState(0)
   const [overlay, setOverlay] = useState(false)
   const [rate, setRate] = useState(1)
+  const rateRef = useRef(1) // browsers reset playbackRate when src changes — reapply from here
 
   const eng = useRef(freshEngine())
   const audioRef = useRef(null)
@@ -169,9 +170,10 @@ export default function LiveIntercept() {
   const rerender = () => setRenderTick((n) => n + 1)
 
   useEffect(() => {
+    const BASE = import.meta.env.BASE_URL
     Promise.all([
-      fetch('/audio/timings.json').then((r) => (r.ok ? r.json() : null)).catch(() => null),
-      fetch('/audio/real/cases.json').then((r) => (r.ok ? r.json() : null)).catch(() => null),
+      fetch(`${BASE}audio/timings.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+      fetch(`${BASE}audio/real/cases.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
     ]).then(([tim, real]) => {
       const list = []
       if (Array.isArray(tim)) list.push(buildTtsCall(tim))
@@ -235,8 +237,10 @@ export default function LiveIntercept() {
     e.wordCount = 0
     if (c.mode === 'audio') {
       const a = audioRef.current
-      a.src = `/audio/${seg.file}`
-      a.playbackRate = rate
+      a.src = `${import.meta.env.BASE_URL}audio/${seg.file}`
+      a.playbackRate = rateRef.current
+      a.onloadedmetadata = () => { a.playbackRate = rateRef.current }
+      a.onplay = () => { a.playbackRate = rateRef.current }
       a.onended = () => {
         if (!eng.current.playing) return
         if (idx + 1 < c.segments.length) segTimerRef.current = setTimeout(() => playSegment(idx + 1), 280)
@@ -345,6 +349,7 @@ export default function LiveIntercept() {
 
   const changeRate = (r) => {
     setRate(r)
+    rateRef.current = r
     if (audioRef.current) audioRef.current.playbackRate = r
   }
 

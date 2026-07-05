@@ -49,7 +49,14 @@ We built v2 specifically so the flagship demos run on real inputs with real infe
 | Network Intel graph, threat-map hotspots, in-app stats | ⚠️ Synthetic demonstration data (no public per-case police data), modelled on published I4C/NCRB/MHA aggregates |
 | Voice-spoof detector (VoiceGuard % score) | ⚠️ Documented ground truth per call (the TTS call *is* TTS; the robocalls are self-identified IVR) — production path: train on ASVspoof / Fake-or-Real / WaveFake |
 
-## Quick Start
+## Try it (no install)
+
+The app is fully static — every model runs in your browser. Deployed via GitHub Actions to GitHub Pages
+(workflow in `.github/workflows/deploy.yml`): push this repo to GitHub, enable **Settings → Pages →
+Source: GitHub Actions**, and the live URL appears on the workflow run. Works on phones — point your
+camera at a note in the FICN scanner.
+
+## Quick Start (local)
 
 ```bash
 npm install

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { analyzeTranscript, highlightTranscript, SAMPLE_TRANSCRIPTS } from '../lib/scamEngine'
-
-const SR = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition)
+import { startMic } from '../lib/micStt'
 
 export default function ScamShield() {
   const [text, setText] = useState(SAMPLE_TRANSCRIPTS[0].text)
@@ -9,9 +8,11 @@ export default function ScamShield() {
   const [busy, setBusy] = useState(false)
   const [micOn, setMicOn] = useState(false)
   const [micErr, setMicErr] = useState(null)
-  const recRef = useRef(null)
+  const [micStatus, setMicStatus] = useState(null)
+  const [micEngine, setMicEngine] = useState(null)
+  const sessionRef = useRef(null)
 
-  useEffect(() => () => recRef.current?.stop(), [])
+  useEffect(() => () => sessionRef.current?.stop(), [])
 
   const run = () => {
     setBusy(true)
@@ -24,44 +25,29 @@ export default function ScamShield() {
   }
 
   const stopMic = () => {
-    if (recRef.current) {
-      recRef.current.onend = null
-      recRef.current.stop()
-      recRef.current = null
-    }
+    sessionRef.current?.stop()
+    sessionRef.current = null
     setMicOn(false)
+    setMicStatus(null)
   }
 
-  const startMic = () => {
+  const toggleMic = async () => {
     if (micOn) return stopMic()
     setMicErr(null)
-    const rec = new SR()
-    rec.continuous = true
-    rec.interimResults = true
-    rec.lang = 'en-IN'
-    let finalText = ''
-    rec.onresult = (ev) => {
-      let interim = ''
-      for (let i = ev.resultIndex; i < ev.results.length; i++) {
-        const r = ev.results[i]
-        if (r.isFinal) finalText += r[0].transcript + ' '
-        else interim += r[0].transcript
-      }
-      const full = `${finalText} ${interim}`.trim()
-      setText(full)
-      setResult(full ? analyzeTranscript(full) : null)
-    }
-    rec.onerror = (ev) => {
-      setMicErr(ev.error === 'not-allowed' ? 'Microphone permission denied.' : `Speech recognition error: ${ev.error}`)
-      stopMic()
-    }
-    // Chrome ends recognition after silence — restart while the mic toggle is on
-    rec.onend = () => { try { rec.start() } catch { setMicOn(false) } }
-    rec.start()
-    recRef.current = rec
     setText('')
     setResult(null)
     setMicOn(true)
+    const session = await startMic({
+      onText: (full) => {
+        setText(full)
+        setResult(full ? analyzeTranscript(full) : null)
+      },
+      onStatus: setMicStatus,
+      onError: (e) => { setMicErr(e); setMicOn(false); setMicStatus(null) },
+    })
+    if (!session) { setMicOn(false); return }
+    sessionRef.current = session
+    setMicEngine(session.engine)
   }
 
   const gaugeColor =
@@ -85,22 +71,23 @@ export default function ScamShield() {
             ))}
             <button
               className={`btn ${micOn ? 'danger' : 'ghost'}`}
-              onClick={startMic}
-              disabled={!SR}
-              title={SR ? 'Real speech-to-text via the Web Speech API' : 'Speech recognition needs Chrome/Edge'}
+              onClick={toggleMic}
+              title="Real speech-to-text — offline Vosk model (en-IN), no cloud required"
             >
               {micOn ? '⏹ Stop Mic — listening…' : '🎙 Live Mic (real STT)'}
             </button>
           </div>
 
-          {micOn && (
+          {micOn && micStatus && (
+            <div className="mic-banner"><div className="spinner" /> {micStatus}</div>
+          )}
+          {micOn && !micStatus && (
             <div className="mic-banner">
-              <span className="mic-dot" /> LIVE — real speech-to-text (Web Speech API, en-IN). Speak a scam line,
+              <span className="mic-dot" /> LIVE — real speech-to-text ({micEngine || 'starting…'}). Speak a scam line,
               e.g. “I am calling from the CBI, there is an arrest warrant against you, transfer the money immediately.”
             </div>
           )}
           {micErr && <div className="mic-banner err">⚠ {micErr}</div>}
-          {!SR && <div className="mic-banner err">Live Mic needs Chrome or Edge (Web Speech API unavailable here).</div>}
 
           <textarea
             className="transcript"

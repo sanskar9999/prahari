@@ -267,6 +267,31 @@ mark.identity { background: rgba(52,211,153,0.2); color: #a7f3d0; }
 }
 .card { box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 10px 30px -18px rgba(0,0,0,0.7); }
 
+/* ---------- Network Intel walkthrough ---------- */
+.graph-caption {
+  position: absolute; top: 12px; left: 12px; right: 12px; z-index: 5;
+  background: rgba(12,18,32,0.92); border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 16px; animation: slide-in 0.35s ease;
+}
+.graph-caption b { font-family: var(--font-display); font-size: 15px; letter-spacing: 0.8px; color: var(--cyan); }
+.graph-caption p { font-size: 12.5px; color: var(--text); line-height: 1.55; margin-top: 4px; }
+
+.step-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+.step-item {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12.5px; color: var(--muted); padding: 7px 10px;
+  border: 1px solid transparent; border-radius: 8px;
+}
+.step-item.now { color: var(--text); background: var(--cyan-dim); border-color: rgba(34,211,238,0.3); }
+.step-item.done { color: var(--green); }
+.step-num {
+  width: 20px; height: 20px; min-width: 20px; border-radius: 50%;
+  border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 10.5px;
+}
+.step-item.done .step-num { border-color: var(--green); color: var(--green); }
+.step-item.now .step-num { border-color: var(--cyan); color: var(--cyan); }
+
 /* ---------- Note Scanner v2 ---------- */
 .tab-row { display: flex; gap: 8px; margin-bottom: 16px; }
 .tab-btn {
@@ -489,6 +514,43 @@ mark.identity { background: rgba(52,211,153,0.2); color: #a7f3d0; }
   color: #06110d; font-size: 15px; cursor: pointer;
 }
 .wa-side { max-width: 560px; }
+
+/* ---------- Mobile (judges' phones, PoS counters) ---------- */
+@media (max-width: 860px) {
+  body { overflow: auto; }
+  .app { flex-direction: column; height: auto; min-height: 100vh; }
+  .sidebar {
+    width: 100%; min-width: 0; flex-direction: column; padding: 10px 12px;
+    border-right: none; border-bottom: 1px solid var(--border);
+  }
+  .brand { padding-bottom: 10px; border-bottom: none; }
+  .nav {
+    flex-direction: row; overflow-x: auto; margin-top: 4px; gap: 6px;
+    padding-bottom: 4px; flex: none;
+  }
+  .nav-item { white-space: nowrap; padding: 8px 12px; font-size: 12.5px; }
+  .sidebar-footer { display: none; }
+  .main { min-width: 0; }
+  .topbar { padding: 0 14px; height: 50px; min-height: 50px; }
+  .topbar-title { font-size: 15px; }
+  .content { padding: 14px; overflow: visible; }
+
+  .grid-stats { grid-template-columns: 1fr 1fr; }
+  .stat-value { font-size: 24px; }
+  .dash-grid, .shield-grid, .scanner-grid, .li-grid, .wa-wrap { grid-template-columns: 1fr; }
+  .graph-grid { grid-template-columns: 1fr; height: auto; }
+  .graph-stage { height: 420px; }
+  .module-links, .module-links.five { grid-template-columns: 1fr 1fr; }
+  #threat-map { height: 320px; }
+  .li-media { grid-template-columns: 1fr; }
+  .li-right { max-height: none; }
+  .ts-window { height: 240px; }
+  .takeover-cols { grid-template-columns: 1fr; }
+  .takeover-title { font-size: 28px; }
+  .phone { display: none; }
+  .wa-phone { height: 78vh; min-height: 480px; }
+  .feed { max-height: 300px; }
+}
 
 ::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
